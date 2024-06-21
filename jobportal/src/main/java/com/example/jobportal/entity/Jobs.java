@@ -15,6 +15,7 @@ public class Jobs {
     private String title;
     private String description;
     private String skill;
+    private String email;
 
     @ManyToMany(mappedBy = "job")
     private Set<User> user = new LinkedHashSet<>();
