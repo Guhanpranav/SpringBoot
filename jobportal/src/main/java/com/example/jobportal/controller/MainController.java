@@ -5,10 +5,12 @@ import com.example.jobportal.entity.Jobs;
 import com.example.jobportal.entity.User;
 import com.example.jobportal.repository.JobRepo;
 import com.example.jobportal.repository.userRepo;
+import com.example.jobportal.service.MessageService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -25,6 +27,9 @@ public class MainController {
     userRepo usr;
     @Autowired
     JobRepo job;
+
+    @Autowired
+    MessageService mservice;
 
     @GetMapping("/login")
     public ModelAndView test(){
@@ -46,7 +51,7 @@ public class MainController {
     public ModelAndView registerUser(@ModelAttribute User user, Model m){
         Optional<User> u = Optional.ofNullable(usr.save(user));
         if(u.isPresent()){
-            m.addAttribute("name", user.getUserName());
+            m.addAttribute("name", user.getUsername());
             return new ModelAndView("registerd");
         }
 
@@ -81,6 +86,8 @@ public class MainController {
         return new ResponseEntity<>(jobs, HttpStatus.BAD_REQUEST);
     }
 
+    //@PreAuthorize("hasRole('ADMIN')")
+    //@Secured("JOBSEEKER")
     @GetMapping("/applyJobs")
     public ModelAndView applyJob(Model m, HttpSession session){
         int userId = (int)session.getAttribute("userId");
@@ -98,8 +105,26 @@ public class MainController {
         Jobs temp_job = job.findById(Integer.parseInt(id)).get();
 
         temp_user.getJob().add(temp_job);
+
+        //sending mail
+        /*
+        try {
+            String title = "Regarding " + temp_job.getTitle();
+            String content = "This user is interested in the job you posted";
+            mservice.sentMail(temp_job.getEmail(), title, content);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }finally {
+            usr.save(temp_user);
+        }
+         */
         usr.save(temp_user);
         return new RedirectView("/api/applyJobs");
     }
 
+
+    @GetMapping("/access-denied")
+    public String accessDenied(){
+        return "access-denied";
+    }
 }
